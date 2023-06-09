@@ -1,7 +1,7 @@
 {
   "name": "@weweb-prerender/renderer-puppeteer",
   "version": "1.2.0",
-  "description": "A renderer for @prerenderer/prerenderer that uses puppeteer to prerender pages.",
+  "description": "WeWeb fork from A renderer for @prerenderer/prerenderer that uses puppeteer to prerender pages.",
   "license": "MIT",
   "exports": {
     "import": "./index.mjs",
@@ -34,6 +34,11 @@
     "email": "adrien.foulon@tukan.hu"
   },
   "contributors": [
+    {
+      "name": "Marc Fabre",
+      "email": "marc@weweb.io",
+      "url": "https://www.weweb.io/"
+    },
     {
       "name": "Joshua Bemenderfer",
       "email": "tribex10@gmail.com",

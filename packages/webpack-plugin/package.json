@@ -1,7 +1,7 @@
 {
   "name": "@weweb-prerender/webpack-plugin",
   "version": "5.3.4",
-  "description": "Flexible, framework-agnostic static site generation for apps built with webpack.",
+  "description": "WeWeb fork from Flexible, framework-agnostic static site generation for apps built with webpack.",
   "license": "MIT",
   "exports": {
     "import": "./index.mjs",
@@ -31,6 +31,11 @@
     "email": "adrien.foulon@tukan.hu"
   },
   "contributors": [
+    {
+      "name": "Marc Fabre",
+      "email": "marc@weweb.io",
+      "url": "https://www.weweb.io/"
+    },
     {
       "name": "Adrien Foulon",
       "email": "adrien.foulon@tukan.hu"

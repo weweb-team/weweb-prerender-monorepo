@@ -1,7 +1,7 @@
 {
   "name": "@weweb-prerender/prerenderer",
   "version": "1.2.1",
-  "description": "Fast, flexible, framework-agnostic prerendering for sites and SPAs.",
+  "description": "WeWeb fork from Fast, flexible, framework-agnostic prerendering for sites and SPAs.",
   "license": "MIT",
   "exports": {
     "import": "./index.mjs",
@@ -32,6 +32,11 @@
     "email": "adrien.foulon@tukan.hu"
   },
   "contributors": [
+    {
+      "name": "Marc Fabre",
+      "email": "marc@weweb.io",
+      "url": "https://www.weweb.io/"
+    },
     {
       "name": "Joshua Bemenderfer",
       "email": "tribex10@gmail.com",

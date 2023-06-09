@@ -8,6 +8,13 @@
     "name": "Adrien Foulon",
     "email": "adrien.foulon@tukan.hu"
   },
+  "contributors": [
+    {
+      "name": "Marc Fabre",
+      "email": "marc@weweb.io",
+      "url": "https://www.weweb.io/"
+    }
+  ],
   "scripts": {
     "prebuild": "rimraf ./packages/*/dist ./packages/*/types",
     "build": "npx lerna run build",
