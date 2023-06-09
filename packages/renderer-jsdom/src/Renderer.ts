@@ -1,4 +1,4 @@
-import { IRenderer, RenderedRoute, Prerenderer } from '@prerenderer/prerenderer'
+import { IRenderer, RenderedRoute, Prerenderer } from '@weweb-prerender/prerenderer'
 import Storage from './Storage'
 
 import { DOMWindow } from 'jsdom'

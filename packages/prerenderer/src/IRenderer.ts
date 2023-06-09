@@ -5,7 +5,8 @@ export type RenderedRoute = {
   originalRoute: string,
   route: string,
   html: string,
-  outputPath?: string
+  outputPath?: string,
+  screenShot?: Buffer,
 }
 
 interface IRenderer {

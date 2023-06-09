@@ -23,7 +23,7 @@ export default function RollupPrerenderPlugin (options: RollupPrerenderOptions =
         const entryPath = opts.entryPath || indexPath
         const defaultBundle = bundle[entryPath]
 
-        const { default: Prerenderer } = await import('@prerenderer/prerenderer')
+        const { default: Prerenderer } = await import('@weweb-prerender/prerenderer')
 
         const PrerendererInstance = new Prerenderer({
           staticDir: output.dir || '/',

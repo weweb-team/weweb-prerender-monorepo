@@ -26,7 +26,7 @@ export default class WebpackPrerenderSPAPlugin {
     if (!(entryPath in compilation.assets)) {
       return false
     }
-    const { default: Prerenderer } = await import('@prerenderer/prerenderer')
+    const { default: Prerenderer } = await import('@weweb-prerender/prerenderer')
 
     const PrerendererInstance = new Prerenderer({
       staticDir: compiler.options.output.path || '/',

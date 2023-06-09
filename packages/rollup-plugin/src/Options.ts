@@ -1,4 +1,4 @@
-import { PrerendererOptions } from '@prerenderer/prerenderer'
+import { PrerendererOptions } from '@weweb-prerender/prerenderer'
 import { JSONSchemaType } from 'ajv'
 import { Schema } from 'schema-utils/declarations/validate'
 

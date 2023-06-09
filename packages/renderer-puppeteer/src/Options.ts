@@ -160,21 +160,9 @@ export const schema: JSONSchemaType<Omit<PuppeteerRendererOptions, 'inject' | 'p
             nullable: true,
           },
           waitUntil: {
-            type: 'null',
             nullable: true,
-            anyOf: [
-              {
-                type: 'string',
-                enum: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'],
-              },
-              {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  enum: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'],
-                },
-              },
-            ],
+            type: 'string',
+            enum: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'],
           },
         },
       },

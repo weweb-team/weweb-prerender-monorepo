@@ -1,4 +1,4 @@
-import Prerenderer, { IRenderer, RenderedRoute } from '@prerenderer/prerenderer'
+import Prerenderer, { IRenderer, RenderedRoute } from '@weweb-prerender/prerenderer'
 
 import promiseLimit from 'promise-limit'
 import puppeteer, { Browser, Page } from 'puppeteer'
@@ -6,6 +6,10 @@ import { PuppeteerRendererFinalOptions, PuppeteerRendererOptions, schema, defaul
 import { waitForRender, listenForRender } from './waitForRender'
 import { validate } from 'schema-utils'
 import deepMerge from 'ts-deepmerge'
+
+class IframeEvent extends Event {
+  detail: string
+}
 
 export default class PuppeteerRenderer implements IRenderer {
   private puppeteer: Browser
@@ -134,9 +138,12 @@ export default class PuppeteerRenderer implements IRenderer {
 
       const navigationOptions = {
         waituntil: 'networkidle0',
-        timeout: options.timeout,
+        timeout: 0,
         ...options.navigationOptions,
       }
+
+      console.log(`\nRoute started : ${route}`)
+      const timeStart = Date.now()
       await page.goto(`${baseURL}${route}`, navigationOptions)
 
       options.pageHandler && await options.pageHandler(page, route)
@@ -162,15 +169,27 @@ export default class PuppeteerRenderer implements IRenderer {
 
       prs.push(page.evaluate(waitForRender, options))
 
+      const waitForIframeHTML = () => {
+        return new Promise<string>((resolve) => {
+          document.addEventListener('iframeContent', (iframeEvent: IframeEvent) => {
+            resolve(iframeEvent.detail)
+          })
+        })
+      }
+
+      const iframeContent = await page.evaluate(waitForIframeHTML)
+
       const res = await Promise.race(prs)
       if (res) {
         throw new Error(res)
       }
 
+      console.log(`\nRoute done : ${route} - ${(Date.now() - timeStart) / 1000}s`)
       const result: RenderedRoute = {
         originalRoute: route,
         route: await page.evaluate('window.location.pathname') as string,
-        html: await page.content(),
+        html: iframeContent,
+        screenShot: await page.screenshot(),
       }
       return result
     } finally {
