@@ -1,5 +1,5 @@
 {
-  "name": "@prerenderer/renderer-puppeteer",
+  "name": "@weweb-prerender/renderer-puppeteer",
   "version": "1.2.0",
   "description": "A renderer for @prerenderer/prerenderer that uses puppeteer to prerender pages.",
   "license": "MIT",
@@ -57,7 +57,7 @@
     "puppeteer": ">= 2"
   },
   "devDependencies": {
-    "@prerenderer/prerenderer": "file:../prerenderer",
+    "@weweb-prerender/prerenderer": "file:../prerenderer",
     "puppeteer": "^19.7.5"
   },
   "engines": {

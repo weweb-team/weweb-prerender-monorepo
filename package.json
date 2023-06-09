@@ -1,5 +1,5 @@
 {
-  "name": "@weweb/prerender-monorepo",
+  "name": "@weweb-prerender/monorepo",
   "description": "Monorepo for prerendering packages.",
   "workspaces": [
     "packages/*"

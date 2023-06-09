@@ -1,5 +1,5 @@
 {
-  "name": "@prerenderer/webpack-plugin",
+  "name": "@weweb-prerender/webpack-plugin",
   "version": "5.3.4",
   "description": "Flexible, framework-agnostic static site generation for apps built with webpack.",
   "license": "MIT",
@@ -63,20 +63,20 @@
     "url": "https://github.com/Tofandel/prerenderer/issues"
   },
   "dependencies": {
-    "@prerenderer/prerenderer": "^1.2.1",
+    "@weweb-prerender/prerenderer": "^1.2.1",
     "schema-utils": "^4.0.0"
   },
   "optionalDependencies": {
-    "@prerenderer/renderer-puppeteer": "^1.1.6"
+    "@weweb-prerender/renderer-puppeteer": "^1.1.6"
   },
   "peerDependencies": {
     "html-webpack-plugin": "^5",
     "webpack": "^5"
   },
   "devDependencies": {
-    "@prerenderer/prerenderer": "file:../prerenderer",
-    "@prerenderer/renderer-jsdom": "^1.1.4",
-    "@prerenderer/renderer-puppeteer": "file:../renderer-puppeteer",
+    "@weweb-prerender/prerenderer": "file:../prerenderer",
+    "@weweb-prerender/renderer-jsdom": "^1.1.4",
+    "@weweb-prerender/renderer-puppeteer": "file:../renderer-puppeteer",
     "express": "^4.18.2",
     "vue": "^3.2.45",
     "vue-loader": "^17.0.1",
