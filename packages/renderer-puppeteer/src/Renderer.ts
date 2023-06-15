@@ -7,13 +7,59 @@ import { waitForRender, listenForRender } from './waitForRender'
 import { validate } from 'schema-utils'
 import deepMerge from 'ts-deepmerge'
 
-class IframeEvent extends Event {
-  detail: string
+interface ScreenSize {
+  order: number;
+  icon: string;
+  query: string | null;
+  queryCss: string;
+  defaultWidth: number | null;
+  defaultHeight: number | null;
+  prerenderWidth: number;
+  prerenderHeight: number;
+}
+
+interface ScreenSizes {
+  [key: string]: ScreenSize;
 }
 
 export default class PuppeteerRenderer implements IRenderer {
   private puppeteer: Browser
   private readonly options: PuppeteerRendererFinalOptions
+
+  private screenSizes: ScreenSizes = {
+    default: {
+      order: 0,
+      icon: 'move',
+      query: null,
+      queryCss: '(min-width: 992px)',
+      defaultWidth: null,
+      defaultHeight: null,
+      prerenderWidth: 1920,
+      prerenderHeight: 1080,
+    },
+    tablet: {
+      order: 1,
+      icon: 'tablet',
+      query: 'max-width: 991px',
+      queryCss: '(min-width: 768px) and (max-width: 991px)',
+      defaultWidth: 770,
+      defaultHeight: (770 * 14) / 9,
+      prerenderWidth: 991,
+      prerenderHeight: Math.round((991 * 14) / 9),
+    },
+    mobile: {
+      order: 2,
+      icon: 'mobile',
+      query: 'max-width: 767px',
+      queryCss: '(max-width: 767px)',
+      defaultWidth: 400,
+      defaultHeight: (400 * 13) / 9,
+      prerenderWidth: 767,
+      prerenderHeight: Math.round((767 * 13) / 9),
+    },
+  }
+
+  private orderedScreenSizes: string[]
 
   constructor (options: PuppeteerRendererOptions = {}) {
     validate(schema, options, {
@@ -127,6 +173,11 @@ export default class PuppeteerRenderer implements IRenderer {
       // Allow setting viewport widths and such.
       if (options.viewport) await page.setViewport(options.viewport)
 
+      this.orderedScreenSizes = Object.keys(this.screenSizes)
+        .map(screenSize => ({ order: this.screenSizes[screenSize].order, screenSize }))
+        .sort(({ order: orderA }, { order: orderB }) => orderA - orderB)
+        .map(({ screenSize }) => screenSize)
+
       await this.handleRequestInterception(page, baseURL)
 
       options.pageSetup && await options.pageSetup(page, route)
@@ -149,52 +200,59 @@ export default class PuppeteerRenderer implements IRenderer {
       options.pageHandler && await options.pageHandler(page, route)
 
       const prs: Array<Promise<void | string>> = []
-      // Wait for some specific element exists
-      if (options.renderAfterElementExists) {
-        const elem = options.renderAfterElementExists
-        prs.push((async () => {
-          try {
-            await page.waitForSelector(elem, {
-              timeout: options.timeout,
-              hidden: options.elementHidden,
-              visible: options.elementVisible,
-            })
-          } catch (e) {
-            await page.close()
-            const timeS = Math.round(options.timeout / 100) / 10
-            throw new Error(`Could not prerender: element '${elem}' did not appear within ${timeS}s`)
-          }
-        })())
-      }
 
+      // Wait 30 sec max
+      prs.push(new Promise(resolve => {
+        setTimeout(resolve, 30000)
+      }))
+
+      prs.push(this.runPrerenderProcess(page))
       prs.push(page.evaluate(waitForRender, options))
-
-      const waitForIframeHTML = () => {
-        return new Promise<string>((resolve) => {
-          document.addEventListener('iframeContent', (iframeEvent: IframeEvent) => {
-            resolve(iframeEvent.detail)
-          })
-        })
-      }
-
-      const iframeContent = await page.evaluate(waitForIframeHTML)
 
       const res = await Promise.race(prs)
       if (res) {
         throw new Error(res)
       }
 
+      await page.bringToFront()
+      const content = await page.content()
+
+      const isHomePage = await page.evaluate('wwLib.$store.getters["websiteData/getPageId"] === wwLib.$store.getters["websiteData/getDesignInfo"].homePageId')
+
       console.log(`\nRoute done : ${route} - ${(Date.now() - timeStart) / 1000}s`)
       const result: RenderedRoute = {
         originalRoute: route,
         route: await page.evaluate('window.location.pathname') as string,
-        html: iframeContent,
-        screenShot: await page.screenshot(),
+        html: content,
+        screenShot: isHomePage ? await page.screenshot() : undefined,
       }
       return result
     } finally {
       await page.close()
     }
+  }
+
+  private async resizeViewport (screenSize: ScreenSize, page: Page) {
+    await page.setViewport({
+      width: screenSize.prerenderWidth,
+      height: screenSize.prerenderHeight,
+    })
+
+    await page.bringToFront()
+  }
+
+  private async runPrerenderProcess (page: Page) {
+    for (const screenSize of this.orderedScreenSizes) {
+      await this.resizeViewport(this.screenSizes[screenSize], page)
+
+      await page.evaluate(`window.prerenderProcess.start('${screenSize}')`)
+
+      await page.waitForSelector(`style[generated-css="${screenSize}"]`)
+    }
+
+    await this.resizeViewport(this.screenSizes.default, page)
+
+    await page.evaluate('window.prerenderProcess.finalize()')
   }
 
   async destroy () {
