@@ -201,9 +201,9 @@ export default class PuppeteerRenderer implements IRenderer {
 
       const prs: Array<Promise<void | string>> = []
 
-      // Wait 30 sec max
+      // Wait options.timeout sec max
       prs.push(new Promise(resolve => {
-        setTimeout(resolve, 30000)
+        setTimeout(resolve, options.timeout)
       }))
 
       prs.push(this.runPrerenderProcess(page))
