@@ -252,18 +252,6 @@ export default class PuppeteerRenderer implements IRenderer {
         'wwLib.$store.getters["websiteData/getPageId"] === wwLib.$store.getters["websiteData/getDesignInfo"].homePageId'
       );
 
-      let screenShot;
-      if (isHomePage) {
-        setTimeout(() => {
-          try {
-            page.bringToFront();
-          } catch {
-            //....
-          }
-        }, 1000);
-        screenShot = await page.screenshot();
-      }
-
       console.log(
         `\nRoute done : ${route} - ${(Date.now() - timeStart) / 1000}s`
       );
@@ -271,7 +259,7 @@ export default class PuppeteerRenderer implements IRenderer {
         originalRoute: route,
         route: (await page.evaluate("window.location.pathname")) as string,
         html: content,
-        screenShot,
+        screenShot: isHomePage ? await page.screenshot() : undefined,
       };
       return result;
     } finally {
