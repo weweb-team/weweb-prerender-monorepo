@@ -1,6 +1,6 @@
 {
   "name": "@weweb-prerender/webpack-plugin",
-  "version": "100.0.2",
+  "version": "100.0.3",
   "description": "WeWeb fork from Flexible, framework-agnostic static site generation for apps built with webpack.",
   "license": "MIT",
   "exports": {
@@ -68,11 +68,11 @@
     "url": "https://github.com/Tofandel/prerenderer/issues"
   },
   "dependencies": {
-    "@weweb-prerender/prerenderer": "100.0.2",
+    "@weweb-prerender/prerenderer": "100.0.3",
     "schema-utils": "^4.0.0"
   },
   "optionalDependencies": {
-    "@weweb-prerender/renderer-puppeteer": "100.0.2"
+    "@weweb-prerender/renderer-puppeteer": "100.0.3"
   },
   "peerDependencies": {
     "html-webpack-plugin": "^5",

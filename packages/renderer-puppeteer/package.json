@@ -1,6 +1,6 @@
 {
   "name": "@weweb-prerender/renderer-puppeteer",
-  "version": "100.0.2",
+  "version": "100.0.3",
   "description": "WeWeb fork from A renderer for @prerenderer/prerenderer that uses puppeteer to prerender pages.",
   "license": "MIT",
   "exports": {

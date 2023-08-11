@@ -44,7 +44,6 @@
     "npm": ">=8"
   },
   "license": "MIT",
-  "private": true,
   "gitHooks": {
     "pre-commit": "lint-staged"
   },
