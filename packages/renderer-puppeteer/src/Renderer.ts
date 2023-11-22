@@ -1,11 +1,19 @@
-import Prerenderer, { IRenderer, RenderedRoute } from '@weweb-prerender/prerenderer'
+import Prerenderer, {
+  IRenderer,
+  RenderedRoute,
+} from "@weweb-prerender/prerenderer";
 
-import promiseLimit from 'promise-limit'
-import puppeteer, { Browser, Page } from 'puppeteer'
-import { PuppeteerRendererFinalOptions, PuppeteerRendererOptions, schema, defaultOptions } from './Options'
-import { waitForRender, listenForRender } from './waitForRender'
-import { validate } from 'schema-utils'
-import deepMerge from 'ts-deepmerge'
+import promiseLimit from "promise-limit";
+import puppeteer, { Browser, Page } from "puppeteer";
+import {
+  PuppeteerRendererFinalOptions,
+  PuppeteerRendererOptions,
+  schema,
+  defaultOptions,
+} from "./Options";
+import { waitForRender, listenForRender } from "./waitForRender";
+import { validate } from "schema-utils";
+import deepMerge from "ts-deepmerge";
 
 interface ScreenSize {
   order: number;
@@ -23,15 +31,15 @@ interface ScreenSizes {
 }
 
 export default class PuppeteerRenderer implements IRenderer {
-  private puppeteer: Browser
-  private readonly options: PuppeteerRendererFinalOptions
+  private puppeteer: Browser;
+  private readonly options: PuppeteerRendererFinalOptions;
 
   private screenSizes: ScreenSizes = {
     default: {
       order: 0,
-      icon: 'move',
+      icon: "move",
       query: null,
-      queryCss: '(min-width: 992px)',
+      queryCss: "(min-width: 992px)",
       defaultWidth: null,
       defaultHeight: null,
       prerenderWidth: 1920,
@@ -39,9 +47,9 @@ export default class PuppeteerRenderer implements IRenderer {
     },
     tablet: {
       order: 1,
-      icon: 'tablet',
-      query: 'max-width: 991px',
-      queryCss: '(min-width: 768px) and (max-width: 991px)',
+      icon: "tablet",
+      query: "max-width: 991px",
+      queryCss: "(min-width: 768px) and (max-width: 991px)",
       defaultWidth: 770,
       defaultHeight: (770 * 14) / 9,
       prerenderWidth: 991,
@@ -49,48 +57,54 @@ export default class PuppeteerRenderer implements IRenderer {
     },
     mobile: {
       order: 2,
-      icon: 'mobile',
-      query: 'max-width: 767px',
-      queryCss: '(max-width: 767px)',
+      icon: "mobile",
+      query: "max-width: 767px",
+      queryCss: "(max-width: 767px)",
       defaultWidth: 400,
       defaultHeight: (400 * 13) / 9,
       prerenderWidth: 767,
       prerenderHeight: Math.round((767 * 13) / 9),
     },
-  }
+  };
 
-  private orderedScreenSizes: string[]
+  private orderedScreenSizes: string[];
 
-  constructor (options: PuppeteerRendererOptions = {}) {
+  constructor(options: PuppeteerRendererOptions = {}) {
     validate(schema, options, {
-      name: 'Renderer Puppeteer',
-      baseDataPath: 'options',
-    })
+      name: "Renderer Puppeteer",
+      baseDataPath: "options",
+    });
 
-    this.options = deepMerge(defaultOptions, options) as PuppeteerRendererFinalOptions
+    this.options = deepMerge(
+      defaultOptions,
+      options
+    ) as PuppeteerRendererFinalOptions;
 
-    if (options.renderAfterTime && this.options.timeout < options.renderAfterTime) {
-      this.options.timeout = options.renderAfterTime + 1000
+    if (
+      options.renderAfterTime &&
+      this.options.timeout < options.renderAfterTime
+    ) {
+      this.options.timeout = options.renderAfterTime + 1000;
     }
   }
 
-  async initialize () {
+  async initialize() {
     // Workaround for Linux SUID Sandbox issues.
-    if (process.platform === 'linux') {
-      if (!this.options.args) this.options.args = []
+    if (process.platform === "linux") {
+      if (!this.options.args) this.options.args = [];
 
-      if (this.options.args.indexOf('--no-sandbox') === -1) {
-        this.options.args.push('--no-sandbox')
-        this.options.args.push('--disable-setuid-sandbox')
+      if (this.options.args.indexOf("--no-sandbox") === -1) {
+        this.options.args.push("--no-sandbox");
+        this.options.args.push("--disable-setuid-sandbox");
       }
     }
 
     // Puppeteer tends to stay alive if the program exits unexpectedly, try to handle this and cleanup
-    const cleanup = () => void this.destroy()
-    process.on('SIGTERM', cleanup)
-    process.on('SIGINT', cleanup)
+    const cleanup = () => void this.destroy();
+    process.on("SIGTERM", cleanup);
+    process.on("SIGINT", cleanup);
 
-    process.on('uncaughtException', cleanup)
+    process.on("uncaughtException", cleanup);
 
     // Previously the whole option object was passed to `launch` which was not the best idea
     // We do a bit of backward compatibility here
@@ -116,82 +130,97 @@ export default class PuppeteerRenderer implements IRenderer {
       skipThirdPartyRequests,
       renderAfterDocumentEvent,
       ...legacyOptions
-    } = this.options
+    } = this.options;
     /* eslint-enable */
     if (!launchOptions) {
       if (Object.keys(legacyOptions).length > 1) {
-        console.warn('You are passing options to puppeteer launch using root options, which has been deprecated put them in "launchOptions" instead [Affected: ' + Object.keys(legacyOptions).join(',') + ']')
+        console.warn(
+          'You are passing options to puppeteer launch using root options, which has been deprecated put them in "launchOptions" instead [Affected: ' +
+            Object.keys(legacyOptions).join(",") +
+            "]"
+        );
       }
     }
-    this.puppeteer = await puppeteer.launch({ headless: headless ? 'new' : false, args, ...(launchOptions || legacyOptions) })
+    this.puppeteer = await puppeteer.launch({
+      headless: headless ? "new" : false,
+      args,
+      ...(launchOptions || legacyOptions),
+    });
   }
 
-  async handleRequestInterception (page: Page, baseURL: string) {
-    await page.setRequestInterception(true)
+  async handleRequestInterception(page: Page, baseURL: string) {
+    await page.setRequestInterception(true);
 
-    page.on('request', (req) => {
+    page.on("request", (req) => {
       // Skip third party requests if needed.
       if (this.options.skipThirdPartyRequests) {
         if (!req.url().startsWith(baseURL)) {
-          void req.abort()
-          return
+          void req.abort();
+          return;
         }
       }
 
-      void req.continue()
-    })
+      void req.continue();
+    });
   }
 
-  renderRoutes (routes: Array<string>, prerenderer: Prerenderer) {
-    const rootOptions = prerenderer.getOptions()
+  renderRoutes(routes: Array<string>, prerenderer: Prerenderer) {
+    const rootOptions = prerenderer.getOptions();
 
-    const baseURL = `http://${rootOptions.server.host}:${rootOptions.server.port}`
+    const baseURL = `http://${rootOptions.server.host}:${rootOptions.server.port}`;
 
-    const limiter = promiseLimit<RenderedRoute>(this.options.maxConcurrentRoutes)
+    const limiter = promiseLimit<RenderedRoute>(
+      this.options.maxConcurrentRoutes
+    );
 
     return Promise.all(
-      routes.map(
-        (route) => limiter(() => this.getPageContent(baseURL, route)),
-      ),
-    )
+      routes.map((route) => limiter(() => this.getPageContent(baseURL, route)))
+    );
   }
 
-  private async getPageContent (baseURL: string, route: string) {
-    const options = this.options
+  private async getPageContent(baseURL: string, route: string) {
+    const options = this.options;
 
-    const page = await this.puppeteer.newPage()
+    const page = await this.puppeteer.newPage();
     try {
       if (options.consoleHandler) {
-        const handler = options.consoleHandler
-        page.on('console', message => handler(route, message))
+        const handler = options.consoleHandler;
+        page.on("console", (message) => handler(route, message));
       }
 
       if (options.inject) {
-        await page.evaluateOnNewDocument(`(function () { window['${options.injectProperty}'] = ${JSON.stringify(options.inject)}; })();`)
+        await page.evaluateOnNewDocument(
+          `(function () { window['${
+            options.injectProperty
+          }'] = ${JSON.stringify(options.inject)}; })();`
+        );
       }
 
       // Allow setting viewport widths and such.
-      if (options.viewport) await page.setViewport(options.viewport)
+      if (options.viewport) await page.setViewport(options.viewport);
 
       this.orderedScreenSizes = Object.keys(this.screenSizes)
-        .map(screenSize => ({ order: this.screenSizes[screenSize].order, screenSize }))
+        .map((screenSize) => ({
+          order: this.screenSizes[screenSize].order,
+          screenSize,
+        }))
         .sort(({ order: orderA }, { order: orderB }) => orderA - orderB)
-        .map(({ screenSize }) => screenSize)
+        .map(({ screenSize }) => screenSize);
 
-      await this.handleRequestInterception(page, baseURL)
+      await this.handleRequestInterception(page, baseURL);
 
-      options.pageSetup && await options.pageSetup(page, route)
+      options.pageSetup && (await options.pageSetup(page, route));
 
       // Hack just in-case the document event fires before our main listener is added.
       if (options.renderAfterDocumentEvent) {
-        await page.evaluateOnNewDocument(listenForRender, options)
+        await page.evaluateOnNewDocument(listenForRender, options);
       }
 
       const navigationOptions = {
-        waituntil: 'networkidle0',
+        waituntil: "networkidle0",
         timeout: 0,
         ...options.navigationOptions,
-      }
+      };
 
       page.on('pageerror', ({ message }) => console.log(`[JS_ERROR_ON_ROUTE] ${route} [MESSAGE] ${message} [/JS_ERROR_ON_ROUTE]`))
 
@@ -199,48 +228,66 @@ export default class PuppeteerRenderer implements IRenderer {
       const timeStart = Date.now()
       await page.goto(`${baseURL}${route}`, navigationOptions)
 
-      options.pageHandler && await options.pageHandler(page, route)
+      options.pageHandler && (await options.pageHandler(page, route));
 
-      const prs: Array<Promise<void | string>> = []
+      const prs: Array<Promise<void | string>> = [];
 
       // Wait options.timeout sec max
-      prs.push(new Promise(resolve => {
-        setTimeout(resolve, options.timeout)
-      }))
+      prs.push(
+        new Promise((resolve) => {
+          setTimeout(resolve, options.timeout);
+        })
+      );
 
       prs.push(this.runPrerenderProcess(page, route))
       prs.push(page.evaluate(waitForRender, options))
 
-      const res = await Promise.race(prs)
+      const res = await Promise.race(prs);
       if (res) {
-        throw new Error(res)
+        throw new Error(res);
       }
 
-      await page.bringToFront()
-      const content = await page.content()
+      await page.bringToFront();
+      const content = await page.content();
 
-      const isHomePage = await page.evaluate('wwLib.$store.getters["websiteData/getPageId"] === wwLib.$store.getters["websiteData/getDesignInfo"].homePageId')
+      const isHomePage = await page.evaluate(
+        'wwLib.$store.getters["websiteData/getPageId"] === wwLib.$store.getters["websiteData/getDesignInfo"].homePageId'
+      );
 
-      console.log(`\nRoute done : ${route} - ${(Date.now() - timeStart) / 1000}s`)
+      let screenShot
+      if (isHomePage) {
+        // Leave 10sec to the screenshot to be taken
+        const screenShotPromise = page.screenshot()
+        const timeoutPromise = new Promise(resolve => {
+          console.log('Screenshot timed out')
+          setTimeout(resolve, 1000);
+        })
+
+        screenShot = await Promise.race([screenShotPromise, timeoutPromise]);
+      }
+
+      console.log(
+        `\nRoute done : ${route} - ${(Date.now() - timeStart) / 1000}s`
+      );
       const result: RenderedRoute = {
         originalRoute: route,
-        route: await page.evaluate('window.location.pathname') as string,
+        route: (await page.evaluate("window.location.pathname")) as string,
         html: content,
-        screenShot: isHomePage ? await page.screenshot() : undefined,
-      }
-      return result
+        screenShot,
+      };
+      return result;
     } finally {
-      await page.close()
+      await page.close();
     }
   }
 
-  private async resizeViewport (screenSize: ScreenSize, page: Page) {
+  private async resizeViewport(screenSize: ScreenSize, page: Page) {
     await page.setViewport({
       width: screenSize.prerenderWidth,
       height: screenSize.prerenderHeight,
-    })
+    });
 
-    await page.bringToFront()
+    await page.bringToFront();
   }
 
   private async runPrerenderProcess (page: Page, route: string) {
@@ -248,20 +295,20 @@ export default class PuppeteerRenderer implements IRenderer {
       console.log(`\nRoute ${route} - ${screenSize} started`)
       await this.resizeViewport(this.screenSizes[screenSize], page)
 
-      await page.evaluate(`window.prerenderProcess.start('${screenSize}')`)
+      await page.evaluate(`window.prerenderProcess.start('${screenSize}')`);
 
       await page.waitForSelector(`style[generated-css="${screenSize}"]`)
       console.log(`\nRoute ${route} - ${screenSize} done`)
     }
 
-    await this.resizeViewport(this.screenSizes.default, page)
+    await this.resizeViewport(this.screenSizes.default, page);
 
-    await page.evaluate('window.prerenderProcess.finalize()')
+    await page.evaluate("window.prerenderProcess.finalize()");
   }
 
-  async destroy () {
+  async destroy() {
     if (this.puppeteer) {
-      await this.puppeteer.close()
+      await this.puppeteer.close();
     }
   }
 }
