@@ -193,6 +193,8 @@ export default class PuppeteerRenderer implements IRenderer {
         ...options.navigationOptions,
       }
 
+      page.on('pageerror', ({ message }) => console.log(`[JS_ERROR_ON_ROUTE] ${route} [MESSAGE] ${message} [/JS_ERROR_ON_ROUTE]`))
+
       console.log(`\nRoute started : ${route}`)
       const timeStart = Date.now()
       await page.goto(`${baseURL}${route}`, navigationOptions)
@@ -206,7 +208,7 @@ export default class PuppeteerRenderer implements IRenderer {
         setTimeout(resolve, options.timeout)
       }))
 
-      prs.push(this.runPrerenderProcess(page))
+      prs.push(this.runPrerenderProcess(page, route))
       prs.push(page.evaluate(waitForRender, options))
 
       const res = await Promise.race(prs)
@@ -241,13 +243,15 @@ export default class PuppeteerRenderer implements IRenderer {
     await page.bringToFront()
   }
 
-  private async runPrerenderProcess (page: Page) {
+  private async runPrerenderProcess (page: Page, route: string) {
     for (const screenSize of this.orderedScreenSizes) {
+      console.log(`\nRoute ${route} - ${screenSize} started`)
       await this.resizeViewport(this.screenSizes[screenSize], page)
 
       await page.evaluate(`window.prerenderProcess.start('${screenSize}')`)
 
       await page.waitForSelector(`style[generated-css="${screenSize}"]`)
+      console.log(`\nRoute ${route} - ${screenSize} done`)
     }
 
     await this.resizeViewport(this.screenSizes.default, page)
