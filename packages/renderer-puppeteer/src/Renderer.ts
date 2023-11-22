@@ -253,7 +253,7 @@ export default class PuppeteerRenderer implements IRenderer {
 
       await page.bringToFront();
       const content = await page.content();
-
+      
       const isHomePage = await page.evaluate(
         'wwLib.$store.getters["websiteData/getPageId"] === wwLib.$store.getters["websiteData/getDesignInfo"].homePageId'
       );
