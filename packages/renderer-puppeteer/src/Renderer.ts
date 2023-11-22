@@ -221,12 +221,12 @@ export default class PuppeteerRenderer implements IRenderer {
         timeout: 0,
         ...options.navigationOptions,
       };
-
+      
       page.on('pageerror', ({ message }) => console.log(`[JS_ERROR_ON_ROUTE] ${route} [MESSAGE] ${message} [/JS_ERROR_ON_ROUTE]`))
 
-      console.log(`\nRoute started : ${route}`)
-      const timeStart = Date.now()
-      await page.goto(`${baseURL}${route}`, navigationOptions)
+      console.log(`\nRoute started : ${route}`);
+      const timeStart = Date.now();
+      await page.goto(`${baseURL}${route}`, navigationOptions);
 
       options.pageHandler && (await options.pageHandler(page, route));
 
@@ -249,7 +249,7 @@ export default class PuppeteerRenderer implements IRenderer {
 
       await page.bringToFront();
       const content = await page.content();
-
+      
       const isHomePage = await page.evaluate(
         'wwLib.$store.getters["websiteData/getPageId"] === wwLib.$store.getters["websiteData/getDesignInfo"].homePageId'
       );
