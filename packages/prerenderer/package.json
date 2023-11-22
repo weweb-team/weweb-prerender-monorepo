@@ -1,6 +1,6 @@
 {
   "name": "@weweb-prerender/prerenderer",
-  "version": "100.0.3",
+  "version": "100.0.4",
   "description": "WeWeb fork from Fast, flexible, framework-agnostic prerendering for sites and SPAs.",
   "license": "MIT",
   "exports": {

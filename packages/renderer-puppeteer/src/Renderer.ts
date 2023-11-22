@@ -221,6 +221,8 @@ export default class PuppeteerRenderer implements IRenderer {
         timeout: 0,
         ...options.navigationOptions,
       };
+      
+      page.on('pageerror', ({ message }) => console.log(`[JS_ERROR_ON_ROUTE] ${route} [MESSAGE] ${message} [/JS_ERROR_ON_ROUTE]`))
 
       console.log(`\nRoute started : ${route}`);
       const timeStart = Date.now();
@@ -237,8 +239,8 @@ export default class PuppeteerRenderer implements IRenderer {
         })
       );
 
-      prs.push(this.runPrerenderProcess(page));
-      prs.push(page.evaluate(waitForRender, options));
+      prs.push(this.runPrerenderProcess(page, route))
+      prs.push(page.evaluate(waitForRender, options))
 
       const res = await Promise.race(prs);
       if (res) {
@@ -247,10 +249,22 @@ export default class PuppeteerRenderer implements IRenderer {
 
       await page.bringToFront();
       const content = await page.content();
-
+      
       const isHomePage = await page.evaluate(
         'wwLib.$store.getters["websiteData/getPageId"] === wwLib.$store.getters["websiteData/getDesignInfo"].homePageId'
       );
+
+      let screenShot
+      if (isHomePage) {
+        // Leave 10sec to the screenshot to be taken
+        const screenShotPromise = page.screenshot()
+        const timeoutPromise = new Promise(resolve => {
+          console.log('Screenshot timed out')
+          setTimeout(resolve, 1000);
+        })
+
+        screenShot = await Promise.race([screenShotPromise, timeoutPromise]);
+      }
 
       console.log(
         `\nRoute done : ${route} - ${(Date.now() - timeStart) / 1000}s`
@@ -259,7 +273,7 @@ export default class PuppeteerRenderer implements IRenderer {
         originalRoute: route,
         route: (await page.evaluate("window.location.pathname")) as string,
         html: content,
-        screenShot: isHomePage ? await page.screenshot() : undefined,
+        screenShot,
       };
       return result;
     } finally {
@@ -276,13 +290,15 @@ export default class PuppeteerRenderer implements IRenderer {
     await page.bringToFront();
   }
 
-  private async runPrerenderProcess(page: Page) {
+  private async runPrerenderProcess (page: Page, route: string) {
     for (const screenSize of this.orderedScreenSizes) {
-      await this.resizeViewport(this.screenSizes[screenSize], page);
+      console.log(`\nRoute ${route} - ${screenSize} started`)
+      await this.resizeViewport(this.screenSizes[screenSize], page)
 
       await page.evaluate(`window.prerenderProcess.start('${screenSize}')`);
 
-      await page.waitForSelector(`style[generated-css="${screenSize}"]`);
+      await page.waitForSelector(`style[generated-css="${screenSize}"]`)
+      console.log(`\nRoute ${route} - ${screenSize} done`)
     }
 
     await this.resizeViewport(this.screenSizes.default, page);
