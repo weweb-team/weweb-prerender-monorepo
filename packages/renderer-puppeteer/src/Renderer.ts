@@ -221,8 +221,12 @@ export default class PuppeteerRenderer implements IRenderer {
         timeout: 0,
         ...options.navigationOptions,
       };
-      
-      page.on('pageerror', ({ message }) => console.log(`[JS_ERROR_ON_ROUTE] ${route} [MESSAGE] ${message} [/JS_ERROR_ON_ROUTE]`))
+
+      page.on("pageerror", ({ message }) =>
+        console.log(
+          `[JS_ERROR_ON_ROUTE] ${route} [MESSAGE] ${message} [/JS_ERROR_ON_ROUTE]`
+        )
+      );
 
       console.log(`\nRoute started : ${route}`);
       const timeStart = Date.now();
@@ -239,8 +243,8 @@ export default class PuppeteerRenderer implements IRenderer {
         })
       );
 
-      prs.push(this.runPrerenderProcess(page, route))
-      prs.push(page.evaluate(waitForRender, options))
+      prs.push(this.runPrerenderProcess(page, route));
+      prs.push(page.evaluate(waitForRender, options));
 
       const res = await Promise.race(prs);
       if (res) {
@@ -254,14 +258,14 @@ export default class PuppeteerRenderer implements IRenderer {
         'wwLib.$store.getters["websiteData/getPageId"] === wwLib.$store.getters["websiteData/getDesignInfo"].homePageId'
       );
 
-      let screenShot
+      let screenShot;
       if (isHomePage) {
         // Leave 10sec to the screenshot to be taken
-        const screenShotPromise = page.screenshot()
-        const timeoutPromise = new Promise(resolve => {
-          console.log('Screenshot timed out')
-          setTimeout(resolve, 1000);
-        })
+        const screenShotPromise = page.screenshot();
+        const timeoutPromise = new Promise((resolve) => {
+          console.log("Screenshot timed out");
+          setTimeout(resolve, 10000);
+        });
 
         screenShot = await Promise.race([screenShotPromise, timeoutPromise]);
       }
@@ -290,15 +294,15 @@ export default class PuppeteerRenderer implements IRenderer {
     await page.bringToFront();
   }
 
-  private async runPrerenderProcess (page: Page, route: string) {
+  private async runPrerenderProcess(page: Page, route: string) {
     for (const screenSize of this.orderedScreenSizes) {
-      console.log(`\nRoute ${route} - ${screenSize} started`)
-      await this.resizeViewport(this.screenSizes[screenSize], page)
+      console.log(`\nRoute ${route} - ${screenSize} started`);
+      await this.resizeViewport(this.screenSizes[screenSize], page);
 
       await page.evaluate(`window.prerenderProcess.start('${screenSize}')`);
 
-      await page.waitForSelector(`style[generated-css="${screenSize}"]`)
-      console.log(`\nRoute ${route} - ${screenSize} done`)
+      await page.waitForSelector(`style[generated-css="${screenSize}"]`);
+      console.log(`\nRoute ${route} - ${screenSize} done`);
     }
 
     await this.resizeViewport(this.screenSizes.default, page);
